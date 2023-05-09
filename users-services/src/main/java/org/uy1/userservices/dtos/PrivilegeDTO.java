@@ -1,5 +1,6 @@
 package org.uy1.userservices.dtos;
 
+import lombok.Builder;
 import lombok.Data;
 import org.uy1.userservices.entities.Profile;
 

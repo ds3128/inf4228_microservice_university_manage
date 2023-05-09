@@ -42,9 +42,9 @@ public class UserRestController {
     }
 
     @PutMapping("/users/{userId}")
-    public UsersDTO updateUsers(@PathVariable Long userId, @RequestBody UsersDTO usersDTO){
+    public UsersDTO updateUsers(@RequestBody UsersDTO usersDTO){
         try {
-            return usersService.updateUsers(userId, usersDTO);
+            return usersService.updateUsers(usersDTO);
         } catch (UsersNotFoundException e){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found", e);
         } catch (DuplicateUserException e){
@@ -122,30 +122,6 @@ public class UserRestController {
             return ResponseEntity.status(HttpStatus.CREATED).body(newPrivilege);
         } catch (Exception e){
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @PostMapping("/users/{username}/privileges")
-    public ResponseEntity<String> addPrivilegeToUser(@PathVariable String username, @RequestParam String privileges){
-        try{
-            usersService.addPrivilegeToUser(username, privileges);
-            return ResponseEntity.ok("Privilege added to user successfully");
-        } catch (UsersNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
-        } catch (PrivilegeNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Privilege not found");
-        }
-    }
-
-    @DeleteMapping("/users/{username}/privileges/{privilege}")
-    public ResponseEntity<Void> removePrivilegeFromUser(@PathVariable String username, @PathVariable String privilege){
-        try {
-            usersService.removePrivilegeFromUser(username, privilege);
-            return ResponseEntity.noContent().build();
-        } catch (UsersNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (PrivilegeNotFoundException e){
-            return ResponseEntity.badRequest().build();
         }
     }
 
