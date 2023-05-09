@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.uy1.userservices.dtos.PrivilegeDTO;
 import org.uy1.userservices.dtos.ProfileDTO;
 import org.uy1.userservices.dtos.UsersDTO;
+import org.uy1.userservices.entities.Profile;
 import org.uy1.userservices.enums.ProfileName;
 import org.uy1.userservices.exceptions.*;
 import org.uy1.userservices.service.UsersServiceImpl;
@@ -28,7 +29,7 @@ public class UserRestController {
     }
 
     @PostMapping("/users")
-    public ResponseEntity<UsersDTO>createUsers(@RequestBody UsersDTO usersDTO){
+    public ResponseEntity<UsersDTO> createUsers(@RequestBody UsersDTO usersDTO){
         try {
             UsersDTO createUser = usersService.createUsers(usersDTO);
             return new ResponseEntity<>(createUser, HttpStatus.CREATED);
@@ -112,6 +113,48 @@ public class UserRestController {
             usersService.removeProfileFromUser(username, profileName);
         } catch (UsersNotFoundException e){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
+        }
+    }
+    @GetMapping("/profiles")
+    public ResponseEntity<List<ProfileDTO>> getAllProfile(){
+        try {
+            List<ProfileDTO> profileDTOS = usersService.getAllProfile();
+            return ResponseEntity.ok(profileDTOS);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    @GetMapping("/profiles/{profileId}")
+    public ResponseEntity<ProfileDTO> getProfileById(@PathVariable Long profileId){
+        try {
+            ProfileDTO profileDTO = usersService.getProfileById(profileId);
+            return ResponseEntity.ok(profileDTO);
+        } catch (ProfileNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/users/profiles/{profileName]")
+    public List<UsersDTO> getUsersByProfileName(@PathVariable ProfileName profileName){
+        return usersService.getUsersByProfileType(profileName);
+    }
+    @PutMapping("/profiles")
+    public ResponseEntity<ProfileDTO> updateProfile(@RequestBody ProfileDTO profileDTO){
+        try {
+            ProfileDTO updateProfile = usersService.updateProfile(profileDTO);
+            return new ResponseEntity<>(updateProfile, HttpStatus.OK);
+        } catch (ProfileNotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @DeleteMapping("/profiles/{profileId}")
+    public ResponseEntity<Void> removeProfileById(@PathVariable Long profileId){
+        try {
+            usersService.removeProfileById(profileId);
+            return ResponseEntity.noContent().build();
+        } catch (ProfileNotFoundException e){
+            return ResponseEntity.notFound().build();
         }
     }
 
