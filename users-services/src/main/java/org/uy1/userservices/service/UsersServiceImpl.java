@@ -195,7 +195,7 @@ public class UsersServiceImpl implements UsersService {
     @Override
     public void addPrivilegeToProfile(ProfileDTO profileDTO, PrivilegeDTO privilegeDTO) throws PrivilegeNotFoundException {
         if (profileDTO == null || profileDTO.getProfileId() == null || privilegeDTO == null || privilegeDTO.getPriId() == null)
-            throw new IllegalArgumentException("profile and privilege most be null");
+            throw new IllegalArgumentException("profile and privilege most not be null");
         Profile profile = profileRepository.findById(profileDTO.getProfileId()).orElseThrow(() -> new ProfileNotFoundException("Profile not found"));
         Privilege privilege = privilegeRepository.findById(privilegeDTO.getPriId()).orElseThrow(() -> new PrivilegeNotFoundException("Privilege not fount"));
 
@@ -227,7 +227,14 @@ public class UsersServiceImpl implements UsersService {
         Profile profile = profileRepository.findById(profileDTO.getProfileId()).orElseThrow(() -> new ProfileNotFoundException("Profile not found"));
         Privilege privilege = privilegeRepository.findById(privilegeDTO.getPriId()).orElseThrow(() -> new PrivilegeNotFoundException("Privilege not found"));
 
+        if (!profile.getPrivileges().contains(privilege)) {
+            throw new IllegalArgumentException("Profile does not have this privilege");
+        }
+
+        profile.getPrivileges().remove(privilege);
         privilege.getProfiles().remove(profile);
+
+        profileRepository.save(profile);
         privilegeRepository.save(privilege);
     }
 
