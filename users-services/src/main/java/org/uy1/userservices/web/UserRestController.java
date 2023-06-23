@@ -1,5 +1,6 @@
 package org.uy1.userservices.web;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.uy1.userservices.exceptions.*;
 import org.uy1.userservices.service.UsersServiceImpl;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Slf4j
@@ -23,21 +25,32 @@ public class UserRestController {
 
     private UsersServiceImpl usersService;
 
-    public UserRestController(UsersServiceImpl usersService) {
+    public UserRestController(UsersServiceImpl usersService){
         this.usersService = usersService;
     }
 
-    @PostMapping("/users")
-    public ResponseEntity<UsersDTO> createUsers(@RequestBody UsersDTO usersDTO){
+    @PostMapping("/addUsers")
+    public ResponseEntity<UsersDTO> createUsers(@RequestBody UsersDTO usersDTO) {
         try {
             UsersDTO createUser = usersService.createUsers(usersDTO);
             return new ResponseEntity<>(createUser, HttpStatus.CREATED);
         } catch (DuplicateUserException e) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
-        } catch (NoMatchException e){
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        } catch (Exception e){
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (NoMatchException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<UsersDTO>> getAllUsers() {
+        try {
+            List<UsersDTO> users = usersService.getAllUsers();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            // Gérer les exceptions appropriées
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -63,11 +76,11 @@ public class UserRestController {
         }
     }
 
-    @GetMapping("/users/search?firstName={firstName}")
-    public List<UsersDTO> findByUsersName(@PathVariable String firstName){
+    @GetMapping("/users/search/firstName")
+    public List<UsersDTO> findByUsersName(@RequestParam(name = "firstName", defaultValue = "") String firstName){
         try {
-            List<UsersDTO> users = usersService.findUserByName(firstName);
-            return users;
+            List<UsersDTO> userByName = usersService.findUserByName(firstName);
+            return userByName;
         } catch (UsersNotFoundException e){
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
         }

@@ -20,6 +20,7 @@ import org.uy1.userservices.repositories.UsersRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -90,6 +91,8 @@ public class UsersServiceImpl implements UsersService {
         usersRepository.deleteById(userId);
     }
 
+
+
     @Override
     public UsersDTO loadUserByUsername(String username) {
         log.info("loading user");
@@ -104,9 +107,11 @@ public class UsersServiceImpl implements UsersService {
         return usersDTO;
     }
 
+
     @Override
     public List<UsersDTO> getUsersByProfileType(ProfileName profileName) {
-        List<Users> users = usersRepository.findByProfile(profileName);
+        List<Users> users = new ArrayList<>();
+        usersRepository.findByProfile(profileName);
         List<UsersDTO> usersDTOS = users.stream().map(usr -> usersMapper.convertToUserDTO(usr)).collect(Collectors.toList());
         return usersDTOS;
     }
@@ -168,13 +173,13 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public void addProfileToUser(String username, ProfileName profileName) {
-        if (username.equals("") || profileName.equals(""))
+        if (username.isEmpty() || profileName == null)
             throw new UsersNotFoundException("username and password invalid");
         Users users = usersRepository.findByUsername(username);
         if (users == null){
             throw new UsersNotFoundException("User not found");
         }
-        Profile profile = profileRepository.findByProfileName(String.valueOf(profileName));
+        Profile profile = profileRepository.findByProfileName(profileName);
         if (profile == null)
             throw new ProfileNotFoundException("Profile not recognise");
         users.setProfile(profile);
@@ -186,9 +191,9 @@ public class UsersServiceImpl implements UsersService {
         if (users == null){
             throw new UsersNotFoundException("User not found");
         }
-        Profile profile = profileRepository.findByProfileName(String.valueOf(profileName));
-        users.getProfile().getUsers().remove(users);
+        Profile profile = profileRepository.findByProfileName(profileName);
         profile.getUsers().remove(users);
+        users.setProfile(null);
         usersRepository.save(users);
     }
 

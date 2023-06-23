@@ -47,7 +47,7 @@ public class UsersServicesApplication {
             usersDTO.setNumTel("696378743");
             usersDTO.setUsername("ds3128");
             usersDTO.setPassword("12345");
-            usersDTO.setConfirmPassword("12345");
+            //usersDTO.setConfirmPassword("12345");
             Users users = usersMapper.convertToUser(usersDTO);
             usersRepository.save(users);
         };
