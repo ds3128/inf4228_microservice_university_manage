@@ -1,12 +1,8 @@
 package org.uy1.userservices.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 import org.uy1.userservices.dtos.PrivilegeDTO;
 import org.uy1.userservices.dtos.ProfileDTO;
 import org.uy1.userservices.dtos.UsersDTO;
@@ -15,7 +11,8 @@ import org.uy1.userservices.exceptions.*;
 import org.uy1.userservices.service.UsersServiceImpl;
 
 import java.util.List;
-import java.util.Map;
+
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
 @Slf4j
@@ -30,227 +27,116 @@ public class UserRestController {
     }
 
     @PostMapping("/addUsers")
-    public ResponseEntity<UsersDTO> createUsers(@RequestBody UsersDTO usersDTO) {
-        try {
-            UsersDTO createUser = usersService.createUsers(usersDTO);
-            return new ResponseEntity<>(createUser, HttpStatus.CREATED);
-        } catch (DuplicateUserException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        } catch (NoMatchException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public UsersDTO createUsers(@RequestBody UsersDTO usersDTO) {
+        return usersService.createUsers(usersDTO);
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<UsersDTO>> getAllUsers() {
-        try {
-            List<UsersDTO> users = usersService.getAllUsers();
-            return ResponseEntity.ok(users);
-        } catch (Exception e) {
-            // Gérer les exceptions appropriées
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public List<UsersDTO> getAllUsers() {
+        return usersService.getAllUsers();
     }
 
     @PutMapping("/users/{userId}")
     public UsersDTO updateUsers(@PathVariable Long userId, @RequestBody UsersDTO usersDTO){
-        try {
-            usersDTO.setUserId(userId);
-            return usersService.updateUsers(usersDTO);
-        } catch (UsersNotFoundException e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Users not found", e);
-        } catch (DuplicateUserException e){
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already exist", e);
-        }
+        usersDTO.setUserId(userId);
+        return usersService.updateUsers(usersDTO);
     }
 
-    @DeleteMapping("/users/{userId}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long userId){
-        try {
-            usersService.deleteUsers(userId);
-            return ResponseEntity.ok("User with id " + userId + " has been deleted.");
-        } catch (UsersNotFoundException e){
-            return ResponseEntity.notFound().build();
-        }
+    @DeleteMapping("/users/delete/{userId}")
+    public void deleteUser(@PathVariable Long userId){
+        usersService.deleteUsers(userId);
     }
 
     @GetMapping("/users/search/firstName")
-    public List<UsersDTO> findByUsersName(@RequestParam(name = "firstName", defaultValue = "") String firstName){
-        try {
-            List<UsersDTO> userByName = usersService.findUserByName(firstName);
-            return userByName;
-        } catch (UsersNotFoundException e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
+    public List<UsersDTO> findByUsersName(@PathVariable String firstName){
+        return usersService.findUserByName(firstName);
     }
 
     @GetMapping("/users/{username}")
-    public ResponseEntity<?> loadUserByUsername(@PathVariable String username){
-        try {
-            UsersDTO users = usersService.loadUserByUsername(username);
-            return ResponseEntity.ok(users);
-        } catch (UsersNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+    public UsersDTO loadUserByUsername(@PathVariable String username){
+            return usersService.loadUserByUsername(username);
     }
 
     @PostMapping("/profiles")
-    public ResponseEntity<?> addNewProfile(@RequestBody ProfileDTO profileDTO){
-        try {
-            ProfileDTO saveProfile = usersService.addNewProfile(profileDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(saveProfile);
-        } catch (DuplicateProfileException e){
-            return ResponseEntity.status(HttpStatus.CONFLICT).body("profile already exist");
-        } catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error income during creating profile");
-        }
+    public ProfileDTO addNewProfile(@RequestBody ProfileDTO profileDTO){
+        return usersService.addNewProfile(profileDTO);
     }
 
     @PostMapping("/users/{username}/profile/{profileName}")
-    public  ResponseEntity<?> addProfileToUser(@PathVariable String username, @PathVariable ProfileName profileName){
-        try {
-            usersService.addProfileToUser(username, profileName);
-            return ResponseEntity.ok().build();
-        } catch (UsersNotFoundException e){
-            return ResponseEntity.notFound().build();
-        } catch (ProfileNotFoundException e){
-            return ResponseEntity.badRequest().body("Profile not found");
-        }
+    public  void addProfileToUser(@PathVariable String username, @PathVariable ProfileName profileName){
+        this.usersService.addProfileToUser(username, profileName);
     }
 
     @DeleteMapping("/users/{username}/profile/{profileName}")
     public void removeProfileToUser(@PathVariable String username, @PathVariable ProfileName profileName) throws UsersNotFoundException{
-        try {
-            usersService.removeProfileFromUser(username, profileName);
-        } catch (UsersNotFoundException e){
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage(), e);
-        }
+        usersService.removeProfileFromUser(username, profileName);
     }
     @GetMapping("/profiles")
-    public ResponseEntity<List<ProfileDTO>> getAllProfile(){
-        try {
-            List<ProfileDTO> profileDTOS = usersService.getAllProfile();
-            return ResponseEntity.ok(profileDTOS);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public List<ProfileDTO> getAllProfile(){
+
+        return usersService.getAllProfile();
     }
     @GetMapping("/profiles/{profileId}")
-    public ResponseEntity<ProfileDTO> getProfileById(@PathVariable Long profileId){
-        try {
-            ProfileDTO profileDTO = usersService.getProfileById(profileId);
-            return ResponseEntity.ok(profileDTO);
-        } catch (ProfileNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ProfileDTO getProfileById(@PathVariable Long profileId){
+
+        return usersService.getProfileById(profileId);
     }
 
-    @GetMapping("/users/profiles/{profileName}")
+    @GetMapping(path = "/users/profiles/{profileName}", produces = APPLICATION_JSON_VALUE)
     public List<UsersDTO> getUsersByProfileName(@PathVariable ProfileName profileName){
         return usersService.getUsersByProfileType(profileName);
     }
-    @PutMapping("/profiles/{profileId}")
-    public ResponseEntity<ProfileDTO> updateProfile(@PathVariable Long profileId, @RequestBody ProfileDTO profileDTO){
-        try {
-            profileDTO.setProfileId(profileId);
-            ProfileDTO updateProfile = usersService.updateProfile(profileDTO);
-            return new ResponseEntity<>(updateProfile, HttpStatus.OK);
-        } catch (ProfileNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    @PutMapping(path = "/profiles/{profileId}", consumes = APPLICATION_JSON_VALUE)
+    public ProfileDTO updateProfile(@PathVariable Long profileId, @RequestBody ProfileDTO profileDTO){
+
+        profileDTO.setProfileId(profileId);
+        return usersService.updateProfile(profileDTO);
     }
 
     @DeleteMapping("/profiles/{profileId}")
-    public ResponseEntity<Void> removeProfileById(@PathVariable Long profileId){
-        try {
-            usersService.removeProfileById(profileId);
-            return ResponseEntity.noContent().build();
-        } catch (ProfileNotFoundException e){
-            return ResponseEntity.notFound().build();
-        }
+    public void removeProfileById(@PathVariable Long profileId){
+
+        this.usersService.removeProfileById(profileId);
     }
 
-    @PostMapping("/privileges")
-    public  ResponseEntity<PrivilegeDTO> addNewPrivilege(@RequestBody PrivilegeDTO privilegeDTO){
-        try {
-            PrivilegeDTO newPrivilege = usersService.addNewPrivilege(privilegeDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(newPrivilege);
-        } catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    @PostMapping(path = "/privileges", consumes = APPLICATION_JSON_VALUE)
+    public  PrivilegeDTO addNewPrivilege(@RequestBody PrivilegeDTO privilegeDTO){
+
+        return usersService.addNewPrivilege(privilegeDTO);
     }
     @PostMapping("/profiles/{profileId}/privileges")
-    public ResponseEntity<String> addPrivilegeToProfile(@PathVariable Long profileId, @RequestBody PrivilegeDTO privilegeDTO) {
-        try {
-            ProfileDTO profileDTO = usersService.getProfileById(profileId);
-            usersService.addPrivilegeToProfile(profileDTO, privilegeDTO);
-            return ResponseEntity.ok("Privilege added successfully to profile !");
-        } catch (ProfileNotFoundException | PrivilegeNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e){
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while adding privilege to profile.");
-        }
+    public void addPrivilegeToProfile(@PathVariable Long profileId, @RequestBody PrivilegeDTO privilegeDTO) throws PrivilegeNotFoundException {
+        ProfileDTO profileDTO = usersService.getProfileById(profileId);
+        usersService.addPrivilegeToProfile(profileDTO, privilegeDTO);
     }
     @DeleteMapping("/profiles/{profileId}/privileges/{privilegeId}")
-    public ResponseEntity<?> removePrivilegeToProfile(@PathVariable Long profileId, @PathVariable Long privilegeId) {
-        try {
-            ProfileDTO profileDTO = new ProfileDTO();
-            profileDTO.setProfileId(profileId);
-            PrivilegeDTO privilegeDTO = new PrivilegeDTO();
-            privilegeDTO.setPriId(privilegeId);
-            usersService.removePrivilegeToProfile(profileDTO, privilegeDTO);
-            return ResponseEntity.ok().build();
-        } catch (ProfileNotFoundException e){
-            return ResponseEntity.notFound().build();
-        } catch (PrivilegeNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public void removePrivilegeToProfile(@PathVariable Long profileId, @PathVariable Long privilegeId) throws PrivilegeNotFoundException {
+        ProfileDTO profileDTO = new ProfileDTO();
+        profileDTO.setProfileId(profileId);
+        PrivilegeDTO privilegeDTO = new PrivilegeDTO();
+        privilegeDTO.setPriId(privilegeId);
+        usersService.removePrivilegeToProfile(profileDTO, privilegeDTO);
     }
 
     @GetMapping("/privileges")
-    public ResponseEntity<List<PrivilegeDTO>> getAllPrivilege(){
-        try {
-            List<PrivilegeDTO> privilegeDTOS = usersService.getAllPrivileges();
-            return ResponseEntity.ok(privilegeDTOS);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+    public List<PrivilegeDTO> getAllPrivilege(){
+
+        return usersService.getAllPrivileges();
     }
     @PutMapping("/privileges/{privilegesId}")
-    public ResponseEntity<PrivilegeDTO> updatePrivilege(@PathVariable Long privilegesId, @RequestBody PrivilegeDTO privilegeDTO) {
-        try {
-            privilegeDTO.setPriId(privilegesId);
-            PrivilegeDTO updatePrivilege = usersService.updatePrivilege(privilegeDTO);
-            return ResponseEntity.ok().body(updatePrivilege);
-        } catch (PrivilegeNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public PrivilegeDTO updatePrivilege(@PathVariable Long privilegesId, @RequestBody PrivilegeDTO privilegeDTO) throws PrivilegeNotFoundException {
+        privilegeDTO.setPriId(privilegesId);
+        return usersService.updatePrivilege(privilegeDTO);
     }
     @DeleteMapping("/privileges/{privilegesId}")
-    public ResponseEntity<?> removePrivilege(@PathVariable Long privilegesId){
-        try {
-            usersService.removePrivilege(privilegesId);
-            return new ResponseEntity<>("Privilege removed successfully", HttpStatus.OK);
-        } catch (PrivilegeNotFoundException p) {
-            return new ResponseEntity<>(p.getMessage(), HttpStatus.NOT_FOUND);
-        }
+    public void removePrivilege(@PathVariable Long privilegesId) throws PrivilegeNotFoundException {
+        usersService.removePrivilege(privilegesId);
     }
     @GetMapping("/profiles/{profileId}/privileges")
-    public ResponseEntity<List<PrivilegeDTO>> getPrivilegeByProfile(@PathVariable Long profileId){
-        try {
-            ProfileDTO profileDTO = new ProfileDTO();
-            profileDTO.setProfileId(profileId);
-            List<PrivilegeDTO> privilegeDTOS = usersService.getPrivilegesByProfile(profileDTO);
-            return ResponseEntity.ok(privilegeDTOS);
-        } catch (ProfileNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public List<PrivilegeDTO> getPrivilegeByProfile(@PathVariable Long profileId){
+        ProfileDTO profileDTO = new ProfileDTO();
+        profileDTO.setProfileId(profileId);
+        return usersService.getPrivilegesByProfile(profileDTO);
     }
 
 }

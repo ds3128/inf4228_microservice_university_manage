@@ -119,15 +119,9 @@ public class UsersServiceImpl implements UsersService {
     @Override
     public List<UsersDTO> getAllUsers() {
         List<Users> users = usersRepository.findAll();
-        //Version programmation fonctionnelle
         List<UsersDTO> usersDTOS = users.stream().map(usr -> usersMapper.convertToUserDTO(usr)).collect(Collectors.toList());
-        //Version programmation imperative : classique
-//        List<UsersDTO> usersDTOS = new ArrayList<>();
-//        for (Users users1 : users){
-//            UsersDTO usersDTO = usersMapper.convertToUserDTO(users1);
-//            usersDTOS.add(usersDTO);
-//        }
         return usersDTOS;
+//        return usersRepository.findAll().stream().map(users -> usersMapper.convertToUserDTO(users)).collect(Collectors.toList());
     }
 
     @Override
@@ -135,6 +129,18 @@ public class UsersServiceImpl implements UsersService {
         Users users = usersRepository.findById(userId).orElseThrow(() -> new UsersNotFoundException("Users Id not exist"));
         return usersMapper.convertToUserDTO(users);
     }
+
+//    @Override
+//    public UsersDTO getUsersById(Long userId) {
+//        Optional<Users> optionalUsers = this.usersRepository.findById(userId);
+//        if (optionalUsers.isPresent()){
+//            Users users = optionalUsers.get();
+//            return usersMapper.convertToUserDTO(users);
+//        }
+//        else {
+//            throw new UsersNotFoundException("User not found");
+//        }
+//    }
     @Override
     public List<ProfileDTO> getAllProfile() {
         List<Profile> profiles = profileRepository.findAll();
@@ -160,14 +166,14 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public ProfileDTO updateProfile(ProfileDTO profileDTO) {
-        Profile profile = profileRepository.findById(profileDTO.getProfileId()).orElseThrow(() -> new ProfileNotFoundException("Profile id not found"));
+        Profile profile = profileRepository.findById(profileDTO.getProfileId()).orElseThrow(() -> new ProfileNotFoundException("Profile not found"));
         profile.setProfileName(profileDTO.getProfileName());
         return profileMapper.convertToProfileDTO(profile);
     }
 
     @Override
     public void removeProfileById(Long profileId) {
-        Profile profile = profileRepository.findById(profileId).orElseThrow(() -> new ProfileNotFoundException("Profile id not found"));
+        Profile profile = profileRepository.findById(profileId).orElseThrow(() -> new ProfileNotFoundException("Profile not found"));
         profileRepository.delete(profile);
     }
 
